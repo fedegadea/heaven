@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAVEN — Club & Experiencias</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#000;--s1:#0a0a0a;--s2:#111;--s3:#1a1a1a;
+  --red:#c0392b;--red-d:#922b21;--red-l:#e74c3c;
+  --white:#efefef;--text:#888;--muted:#444;
+  --border:rgba(192,57,43,.2);--err:#ff6b6b;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:'Playfair Display',serif;color:var(--white)}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--red-d);border-radius:3px}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--red);letter-spacing:4px;text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:4px;list-style:none}
+.nav-links a{color:var(--text);text-decoration:none;font-size:12px;font-weight:500;padding:6px 14px;border-radius:6px;letter-spacing:.5px;text-transform:uppercase;transition:.2s}
+.nav-links a:hover{color:var(--red)}
+.nav-cta{background:var(--red)!important;color:#fff!important;font-weight:700!important;border-radius:6px}
+.nav-cta:hover{background:var(--red-l)!important;color:#fff!important}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(192,57,43,.1) 0%,transparent 70%)}
+.hero::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 80px,rgba(192,57,43,.02) 80px,rgba(192,57,43,.02) 81px),repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(192,57,43,.02) 80px,rgba(192,57,43,.02) 81px);pointer-events:none}
+.hero-eyebrow{font-size:10px;letter-spacing:6px;text-transform:uppercase;color:var(--red);margin-bottom:24px;font-weight:500;position:relative;z-index:1}
+.hero-title{font-size:clamp(70px,12vw,140px);font-weight:900;color:var(--white);letter-spacing:16px;line-height:1;margin-bottom:20px;position:relative;z-index:1;text-shadow:0 0 80px rgba(192,57,43,.3)}
+.hero-sub{font-size:15px;color:var(--text);max-width:480px;line-height:1.8;margin-bottom:52px;font-weight:300;position:relative;z-index:1}
+.hero-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:480px;width:100%;position:relative;z-index:1}
+.hero-btn{padding:18px 24px;border-radius:10px;text-decoration:none;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;transition:all .25s;cursor:pointer;border:none;display:block;text-align:center}
+.hero-btn-red{background:var(--red);color:#fff}
+.hero-btn-red:hover{background:var(--red-l);transform:translateY(-2px);box-shadow:0 8px 24px rgba(192,57,43,.4)}
+.hero-btn-outline{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.15)}
+.hero-btn-outline:hover{border-color:var(--red);color:var(--red)}
+.scroll-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);font-size:10px;letter-spacing:2px;text-transform:uppercase;z-index:1}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--red),transparent);animation:scrollAnim 2s ease infinite}
+@keyframes scrollAnim{0%,100%{opacity:.3;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.2)}}
+
+/* ── SECTION ── */
+.section{padding:96px 40px;max-width:1100px;margin:0 auto}
+.section-full{background:var(--s1);padding:96px 40px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.section-inner{max-width:1100px;margin:0 auto}
+.sec-tag{font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--red);margin-bottom:16px;display:block}
+.sec-title{font-size:clamp(32px,4vw,52px);font-weight:700;color:var(--white);letter-spacing:-1px;margin-bottom:12px;line-height:1.1}
+.sec-sub{font-size:14px;color:var(--text);line-height:1.8;margin-bottom:52px;max-width:540px;font-weight:300}
+.divider{width:48px;height:1px;background:var(--red);margin-bottom:32px;opacity:.6}
+
+/* ── ENTRADAS ── */
+.day-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:32px}
+.day-tab{padding:8px 18px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Poppins',sans-serif;transition:.2s}
+.day-tab:hover{color:var(--text);border-color:var(--red)}
+.day-tab.active{background:var(--red);color:#fff;border-color:var(--red)}
+.slots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.slot-card{background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .2s;cursor:pointer;position:relative;overflow:hidden}
+.slot-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);opacity:0;transition:.2s}
+.slot-card:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:0 8px 24px rgba(192,57,43,.15)}
+.slot-card:hover::before{opacity:1}
+.slot-time{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:8px;font-weight:500}
+.slot-name{font-size:16px;font-weight:600;color:var(--white);margin-bottom:4px;font-family:'Playfair Display',serif}
+.slot-desc{font-size:12px;color:var(--text);margin-bottom:18px;line-height:1.6}
+.slot-price{font-size:26px;font-weight:700;color:var(--white);margin-bottom:16px;font-family:'Playfair Display',serif}
+.slot-price span{font-size:13px;color:var(--text);font-weight:400;font-family:'Poppins',sans-serif}
+.slot-btn{width:100%;padding:11px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:.2s}
+.slot-btn:hover{background:var(--red);color:#fff}
+
+/* ── MEMBRESÍA ── */
+.memb-card{background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;position:relative;overflow:hidden}
+.memb-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.memb-badge{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:16px}
+.memb-title{font-size:38px;font-weight:700;color:var(--white);margin-bottom:8px;line-height:1.1}
+.memb-price{font-size:52px;font-weight:900;color:var(--red);font-family:'Playfair Display',serif;line-height:1;margin-bottom:4px}
+.memb-period{font-size:12px;color:var(--text);margin-bottom:32px;letter-spacing:1px;text-transform:uppercase}
+.memb-btn{background:var(--red);color:#fff;border:none;border-radius:10px;padding:16px 32px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:.2s}
+.memb-btn:hover{background:var(--red-l);box-shadow:0 6px 20px rgba(192,57,43,.4)}
+.memb-note{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.6}
+.benefits-list{display:flex;flex-direction:column;gap:11px}
+.benefit{display:flex;align-items:flex-start;gap:12px;font-size:13px;color:var(--text);line-height:1.5}
+.benefit::before{content:'▸';color:var(--red);font-size:12px;flex-shrink:0;margin-top:1px}
+
+/* ── EVENTOS ── */
+.events-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.event-card{background:var(--s2);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all .2s;cursor:pointer}
+.event-card:hover{border-color:var(--red);transform:translateY(-3px);box-shadow:0 12px 32px rgba(192,57,43,.15)}
+.event-img{width:100%;height:180px;object-fit:cover;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:48px}
+.event-body{padding:24px}
+.event-name{font-size:20px;font-weight:700;color:var(--white);margin-bottom:4px;font-family:'Playfair Display',serif}
+.event-date{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:12px}
+.event-desc{font-size:12px;color:var(--text);line-height:1.7;margin-bottom:20px}
+.event-prices{display:flex;gap:16px;margin-bottom:16px}
+.event-price-item{flex:1;background:var(--s3);border-radius:8px;padding:10px;text-align:center}
+.event-price-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.event-price-val{font-size:18px;font-weight:700;color:var(--white);font-family:'Playfair Display',serif}
+.event-btn{width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:.2s}
+.event-btn:hover{background:var(--red-l)}
+
+/* ── BOX ── */
+.box-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.box-card{background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:28px;text-align:center;transition:.2s;cursor:pointer;position:relative;overflow:hidden}
+.box-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--red);opacity:0;transition:.2s}
+.box-card:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:0 8px 24px rgba(192,57,43,.12)}
+.box-card:hover::after{opacity:1}
+.box-duration{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:10px}
+.box-name{font-size:20px;font-weight:700;color:var(--white);margin-bottom:8px;font-family:'Playfair Display',serif}
+.box-desc{font-size:12px;color:var(--text);line-height:1.6;margin-bottom:20px}
+.box-price{font-size:32px;font-weight:700;color:var(--white);margin-bottom:20px;font-family:'Playfair Display',serif}
+.box-btn{width:100%;padding:10px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:8px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:.2s}
+.box-btn:hover{background:var(--red);color:#fff}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding:56px 40px;background:var(--s1)}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px}
+.footer-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--red);letter-spacing:4px}
+.footer-copy{font-size:12px;color:var(--muted)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:800;padding:20px;opacity:0;pointer-events:none;transition:.25s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:20px;width:100%;max-width:480px;padding:36px;max-height:90vh;overflow-y:auto;position:relative}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--s3);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;transition:.2s}
+.modal-close:hover{color:var(--white);background:var(--red)}
+.modal-tag{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:10px}
+.modal-title{font-size:24px;font-weight:700;color:var(--white);margin-bottom:4px}
+.modal-price{font-size:36px;font-weight:700;color:var(--red);font-family:'Playfair Display',serif;margin-bottom:8px}
+.modal-divider{height:1px;background:var(--border);margin:20px 0}
+.form-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block;font-weight:600}
+.form-input{width:100%;background:var(--s3);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 14px;color:var(--white);font-family:'Poppins',sans-serif;font-size:13px;outline:none;margin-bottom:12px;transition:.2s}
+.form-input:focus{border-color:var(--red);box-shadow:0 0 0 2px rgba(192,57,43,.15)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-btn{width:100%;background:var(--red);color:#fff;border:none;border-radius:10px;padding:15px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:.2s;margin-top:4px}
+.modal-btn:hover{background:var(--red-l);box-shadow:0 6px 20px rgba(192,57,43,.4)}
+.modal-btn:disabled{opacity:.4;cursor:not-allowed}
+.modal-err{font-size:12px;color:var(--err);margin-bottom:10px;display:none}
+.modal-note{font-size:11px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.6}
+.date-input-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+
+/* ── TICKET TYPE ── */
+.ticket-type-btn{padding:10px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--s3);color:var(--text);letter-spacing:.5px;text-transform:uppercase;transition:.2s}
+.ticket-type-btn.active{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* ── CONFIRMACIÓN ── */
+#confirmScreen{display:none;position:fixed;inset:0;background:var(--bg);z-index:900;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}
+#confirmScreen.show{display:flex}
+.confirm-icon{font-size:56px;margin-bottom:24px;animation:popIn .5s ease}
+@keyframes popIn{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.confirm-title{font-size:36px;font-weight:700;color:var(--white);margin-bottom:12px}
+.confirm-order{font-size:13px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.confirm-num{font-size:32px;font-weight:900;color:var(--red);letter-spacing:4px;font-family:'Playfair Display',serif;margin-bottom:20px}
+.confirm-detail{background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:20px 28px;max-width:380px;width:100%;text-align:left;margin-bottom:28px}
+.confirm-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text);padding:6px 0;border-bottom:1px solid var(--border)}
+.confirm-row:last-child{border-bottom:none;color:var(--white);font-weight:600}
+.confirm-msg{font-size:12px;color:var(--muted);max-width:360px;line-height:1.7;margin-bottom:28px}
+.confirm-back{background:var(--red);color:#fff;border:none;border-radius:10px;padding:14px 32px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:.2s}
+.confirm-back:hover{background:var(--red-l)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--s2);border:1px solid var(--border);color:var(--white);padding:12px 24px;border-radius:30px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s,opacity .3s;opacity:0;white-space:nowrap}
+.toast.ok{border-color:var(--red);color:var(--red-l)}
+.toast.err{border-color:var(--err);color:var(--err)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  .hero-actions{grid-template-columns:1fr}
+  .section{padding:64px 20px}
+  .section-full{padding:64px 20px}
+  .memb-card{grid-template-columns:1fr;gap:32px;padding:28px}
+  .form-row{grid-template-columns:1fr}
+  .date-input-wrap{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/haven" class="nav-logo">HAVEN</a>
+  <ul class="nav-links">
+    <li><a href="#entradas">Entradas</a></li>
+    <li><a href="#membresia">Membresías</a></li>
+    <li><a href="#eventos">Eventos</a></li>
+    <li><a href="#box">Box privados</a></li>
+    <li><a href="#membresia" class="nav-cta">Hacerse miembro</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Buenos Aires · Club exclusivo</div>
+  <h1 class="hero-title">HAVEN</h1>
+  <p class="hero-sub">El espacio que te espera. Entradas, membresías, eventos y espacios privados — todo en un lugar.</p>
+  <div class="hero-actions">
+    <a href="#entradas" class="hero-btn hero-btn-red">Comprar entrada</a>
+    <a href="#membresia" class="hero-btn hero-btn-outline">Ser miembro</a>
+    <a href="#eventos" class="hero-btn hero-btn-outline">Eventos</a>
+    <a href="#box" class="hero-btn hero-btn-outline">Box privado</a>
+  </div>
+  <div class="scroll-hint"><div class="scroll-line"></div></div>
+</section>
+
+<!-- ENTRADAS -->
+<div class="section" id="entradas">
+  <span class="sec-tag">Ingreso al club</span>
+  <h2 class="sec-title">Entradas</h2>
+  <p class="sec-sub">Comprá tu entrada anticipada y agilizá tu ingreso. Elegí el día y la franja horaria.</p>
+  <div class="divider"></div>
+  <div class="day-tabs" id="dayTabs"></div>
+  <div class="slots-grid" id="slotsGrid"></div>
+</div>
+
+<!-- MEMBRESÍA -->
+<div class="section-full" id="membresia">
+  <div class="section-inner">
+    <span class="sec-tag">Acceso total</span>
+    <h2 class="sec-title" style="margin-bottom:40px">Membresía Haven</h2>
+    <div class="memb-card">
+      <div>
+        <div class="memb-badge">Mensual · Renovación manual</div>
+        <div class="memb-title">Membresía<br/>Haven</div>
+        <div class="memb-price">$45.000</div>
+        <div class="memb-period">por mes</div>
+        <button class="memb-btn" onclick="openModal('membresia',{name:'Membresía Haven',price:45000,tag:'Membresía mensual'})">Suscribirme ahora</button>
+        <div class="memb-note">El acceso se activa dentro de las 24h hábiles de confirmado el pago.<br/>Renovación mensual manual — te avisamos antes del vencimiento.</div>
+      </div>
+      <div class="benefits-list">
+        <div class="benefit">Acceso libre lunes, martes y miércoles</div>
+        <div class="benefit">Acceso libre domingos</div>
+        <div class="benefit">Acceso libre jueves hasta las 21:00</div>
+        <div class="benefit">50% de descuento viernes y sábados</div>
+        <div class="benefit">50% de descuento en eventos especiales</div>
+        <div class="benefit">30% de descuento en box privados</div>
+        <div class="benefit">20% de descuento en bar</div>
+        <div class="benefit">15% de descuento en boutique</div>
+        <div class="benefit">Acceso prioritario a eventos</div>
+        <div class="benefit">Reserva anticipada de box</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EVENTOS -->
+<div class="section" id="eventos">
+  <span class="sec-tag">Próximas fechas</span>
+  <h2 class="sec-title">Eventos especiales</h2>
+  <p class="sec-sub">Noches temáticas con cupo limitado. Comprá tu entrada antes de que se agoten.</p>
+  <div class="divider"></div>
+  <div class="events-grid" id="eventsGrid"></div>
+</div>
+
+<!-- BOX PRIVADOS -->
+<div class="section-full" id="box">
+  <div class="section-inner">
+    <span class="sec-tag">Espacio privado</span>
+    <h2 class="sec-title" style="margin-bottom:12px">Box privados</h2>
+    <p class="sec-sub">Tu propio espacio dentro del club. Elegí la duración y reservá tu turno.</p>
+    <div class="divider"></div>
+    <div class="box-grid" id="boxGrid"></div>
+    <p style="font-size:12px;color:var(--muted);margin-top:20px">▸ Miembros: 30% OFF en todas las opciones de box.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">HAVEN</div>
+    <nav style="display:flex;gap:24px">
+      <a href="#entradas" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Entradas</a>
+      <a href="#membresia" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Membresías</a>
+      <a href="#eventos" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Eventos</a>
+      <a href="/haven/admin" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Admin</a>
+    </nav>
+    <div class="footer-copy">© 2025 HAVEN. Todos los derechos reservados.</div>
+  </div>
+</footer>
+
+<!-- PURCHASE MODAL -->
+<div class="overlay" id="purchaseOverlay" onclick="if(event.target===this)closePurchaseModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closePurchaseModal()">✕</button>
+    <div class="modal-tag" id="mTag">Entrada</div>
+    <div class="modal-title" id="mTitle">Título</div>
+    <div id="mSubtitle" style="font-size:12px;color:var(--text);margin-bottom:8px"></div>
+    <div class="modal-price" id="mPrice">$0</div>
+    <div class="modal-divider"></div>
+    <!-- Box date picker -->
+    <div id="boxDateSection" style="display:none">
+      <label class="form-label">Fecha y horario preferido</label>
+      <div class="date-input-wrap">
+        <input type="date" id="boxDate" class="form-input" style="margin-bottom:0"/>
+        <input type="time" id="boxTime" class="form-input" style="margin-bottom:0"/>
+      </div>
+      <div style="margin-bottom:12px"></div>
+    </div>
+    <!-- Ticket type for events -->
+    <div id="eventTypeSection" style="display:none;margin-bottom:14px">
+      <label class="form-label">Tipo de entrada</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="ticket-type-btn active" data-type="general" onclick="selectTicketType(this,'general')">General</button>
+        <button class="ticket-type-btn" data-type="miembro" onclick="selectTicketType(this,'miembro')">Miembro</button>
+      </div>
+    </div>
+    <label class="form-label">Nombre y apellido *</label>
+    <input class="form-input" id="fName" type="text" placeholder="Tu nombre completo"/>
+    <div class="form-row">
+      <div>
+        <label class="form-label">DNI *</label>
+        <input class="form-input" id="fDni" type="text" placeholder="12.345.678"/>
+      </div>
+      <div>
+        <label class="form-label">Teléfono *</label>
+        <input class="form-input" id="fPhone" type="tel" placeholder="+54 9 11..."/>
+      </div>
+    </div>
+    <label class="form-label">Email *</label>
+    <input class="form-input" id="fEmail" type="email" placeholder="tu@email.com"/>
+    <label class="form-label">Observaciones</label>
+    <input class="form-input" id="fNotes" type="text" placeholder="Opcional"/>
+    <div class="modal-err" id="mErr"></div>
+    <button class="modal-btn" id="mPayBtn" onclick="submitPurchase()">Pagar con Mercado Pago →</button>
+    <div class="modal-note">Recibirás un mail de confirmación con tu número de orden para presentar en recepción.</div>
+  </div>
+</div>
+
+<!-- CONFIRMATION -->
+<div id="confirmScreen">
+  <div class="confirm-icon">✔</div>
+  <h2 class="confirm-title">¡Listo!</h2>
+  <div class="confirm-order">Número de orden</div>
+  <div class="confirm-num" id="confirmOrderNum">—</div>
+  <div class="confirm-detail" id="confirmDetail"></div>
+  <div class="confirm-msg">Enviamos el detalle de tu compra a tu email. Presentá el número de orden en recepción para ingresar.</div>
+  <button class="confirm-back" onclick="document.getElementById('confirmScreen').classList.remove('show')">Volver al inicio</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://dtopwxldxlwgdvpjcegg.supabase.co';
+const SUPA_KEY = 'sb_publishable_W54QQPJ_WFtvI67N5SPniQ_jZ1kpCES';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ── ENTRADAS DATA ────────────────────────────────────────────────────────────
+const DAYS = [
+  {
+    id:'lmx', label:'Lun — Mié',
+    slots:[
+      {id:'lmx-early', time:'14:00 — 17:00', name:'Promo Early', desc:'Ingreso anticipado con precio especial.', price:6000},
+      {id:'lmx-gen',   time:'17:00 — 22:00', name:'Entrada General', desc:'Acceso al club en horario completo.', price:8000},
+    ]
+  },
+  {
+    id:'jue', label:'Jueves · After Office',
+    slots:[
+      {id:'jue-promo', time:'14:00 — 18:00', name:'Promo Tarde', desc:'Ingreso anticipado jueves After Office.', price:8000},
+      {id:'jue-gen',   time:'18:00 — 22:00', name:'Entrada General', desc:'Horario central After Office.', price:10000},
+      {id:'jue-late',  time:'22:00 — 02:00', name:'Ingreso Nocturno', desc:'Entrada desde las 22h.', price:12000},
+    ]
+  },
+  {
+    id:'vie', label:'Viernes · Tercer Tiempo',
+    slots:[
+      {id:'vie-tard', time:'14:00 — 20:00', name:'Tarde', desc:'Apertura del viernes.', price:10000},
+      {id:'vie-noch', time:'20:00 — 00:00', name:'Noche', desc:'El momento más intenso del viernes.', price:15000},
+      {id:'vie-mad',  time:'00:00 — 06:00', name:'Madrugada', desc:'La noche que no termina.', price:18000},
+    ]
+  },
+  {
+    id:'sab', label:'Sábados · Black Night',
+    slots:[
+      {id:'sab-tard', time:'14:00 — 20:00', name:'Tarde', desc:'Ángeles Caídos — apertura del sábado.', price:12000},
+      {id:'sab-noch', time:'20:00 — 00:00', name:'Noche', desc:'La noche del sábado en su plenitud.', price:18000},
+      {id:'sab-mad',  time:'00:00 — 06:00', name:'Black Night', desc:'La experiencia completa.', price:22000},
+    ]
+  },
+  {
+    id:'dom', label:'Domingos · Atardecer',
+    slots:[
+      {id:'dom-early', time:'14:00 — 17:00', name:'Promo Early', desc:'Domingo tranquilo de apertura.', price:7000},
+      {id:'dom-gen',   time:'17:00 — 22:00', name:'Ángeles del Atardecer', desc:'El cierre de semana en HAVEN.', price:9000},
+    ]
+  },
+];
+
+const EVENTS_DEFAULT = [
+  {id:'umbral', name:'UMBRAL ROJO', emoji:'🔴', date:'Próxima fecha a confirmar', desc:'Una noche de límites y libertad. El rojo como código.', price_general:25000, price_miembro:12500},
+  {id:'adan',   name:'ADÁN Y LA MANZANA', emoji:'🍎', date:'Próxima fecha a confirmar', desc:'La tentación como ritual. La manzana como símbolo.', price_general:22000, price_miembro:11000},
+  {id:'anonimo',name:'ANÓNIMO · Noche de Máscara', emoji:'🎭', date:'Próxima fecha a confirmar', desc:'Sin rostros. Sin nombres. Solo la noche.', price_general:28000, price_miembro:14000},
+];
+
+const BOXES = [
+  {id:'box-1h',  duration:'1 hora',       name:'Box · 1 Hora',       desc:'Espacio privado para una hora.', price:12000},
+  {id:'box-2h',  duration:'2 horas',      name:'Box · 2 Horas',      desc:'Dos horas de privacidad total.', price:20000},
+  {id:'box-noch',duration:'Turno noche',  name:'Box · Noche',        desc:'Tu espacio desde las 22h hasta el cierre.', price:35000},
+  {id:'box-dia', duration:'Día completo', name:'Box · Día Completo', desc:'Disponibilidad total durante el día.', price:50000},
+];
+
+// ── RENDER ENTRADAS ───────────────────────────────────────────────────────────
+let activeDay = 'lmx';
+
+function renderDayTabs(){
+  document.getElementById('dayTabs').innerHTML = DAYS.map(d=>`
+    <button class="day-tab ${d.id===activeDay?'active':''}" onclick="selectDay('${d.id}')">${d.label}</button>
+  `).join('');
+}
+function selectDay(id){ activeDay=id; renderDayTabs(); renderSlots(); }
+function renderSlots(){
+  const day = DAYS.find(d=>d.id===activeDay);
+  document.getElementById('slotsGrid').innerHTML = day.slots.map(s=>`
+    <div class="slot-card">
+      <div class="slot-time">${s.time}</div>
+      <div class="slot-name">${s.name}</div>
+      <div class="slot-desc">${s.desc}</div>
+      <div class="slot-price">$${s.price.toLocaleString('es-AR')} <span>/ persona</span></div>
+      <button class="slot-btn" onclick="openModal('entrada',{name:'${s.name}',subtitle:'${day.label} · ${s.time}',price:${s.price},tag:'Entrada al club',slotId:'${s.id}',dayLabel:'${day.label}'})">Comprar entrada →</button>
+    </div>
+  `).join('');
+}
+
+// ── RENDER EVENTS ─────────────────────────────────────────────────────────────
+async function renderEvents(){
+  let events = EVENTS_DEFAULT;
+  try {
+    const { data } = await sb.from('haven_events').select('*').eq('active',true).order('event_date');
+    if(data && data.length) events = data;
+  } catch(e){}
+  document.getElementById('eventsGrid').innerHTML = events.map(ev=>`
+    <div class="event-card">
+      <div class="event-img">${ev.emoji||'✦'}</div>
+      <div class="event-body">
+        <div class="event-name">${ev.name}</div>
+        <div class="event-date">${ev.event_date||ev.date||'Fecha próxima'} ${ev.event_time?'· '+ev.event_time:''}</div>
+        <div class="event-desc">${ev.description||ev.desc||''}</div>
+        <div class="event-prices">
+          <div class="event-price-item"><div class="event-price-label">General</div><div class="event-price-val">$${Number(ev.price_general).toLocaleString('es-AR')}</div></div>
+          <div class="event-price-item"><div class="event-price-label">Miembro</div><div class="event-price-val">$${Number(ev.price_miembro).toLocaleString('es-AR')}</div></div>
+        </div>
+        <button class="event-btn" onclick='openModal("evento",${JSON.stringify({name:ev.name,price:ev.price_general,priceMember:ev.price_miembro,tag:"Evento especial",eventId:ev.id||ev.name,date:ev.event_date||ev.date||"A confirmar"})})'>Comprar entrada →</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── RENDER BOX ────────────────────────────────────────────────────────────────
+function renderBoxes(){
+  document.getElementById('boxGrid').innerHTML = BOXES.map(b=>`
+    <div class="box-card">
+      <div class="box-duration">${b.duration}</div>
+      <div class="box-name">${b.name}</div>
+      <div class="box-desc">${b.desc}</div>
+      <div class="box-price">$${b.price.toLocaleString('es-AR')}</div>
+      <button class="box-btn" onclick="openModal('box',{name:'${b.name}',price:${b.price},tag:'Box privado',duration:'${b.duration}',boxId:'${b.id}'})">Reservar →</button>
+    </div>
+  `).join('');
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+let currentPurchase = null;
+let selectedTicketType = 'general';
+
+function openModal(type, data){
+  currentPurchase = { type, ...data };
+  selectedTicketType = 'general';
+  document.getElementById('mTag').textContent = data.tag || type;
+  document.getElementById('mTitle').textContent = data.name;
+  document.getElementById('mSubtitle').textContent = data.subtitle || data.date || data.duration || '';
+  document.getElementById('mPrice').textContent = '$'+Number(data.price).toLocaleString('es-AR');
+  document.getElementById('mErr').style.display = 'none';
+  document.getElementById('mPayBtn').disabled = false;
+  document.getElementById('mPayBtn').textContent = 'Pagar con Mercado Pago →';
+  ['fName','fDni','fPhone','fEmail','fNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('boxDateSection').style.display = type==='box' ? 'block' : 'none';
+  document.getElementById('eventTypeSection').style.display = type==='evento' ? 'block' : 'none';
+  if(type==='box') document.getElementById('boxDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('purchaseOverlay').classList.add('open');
+}
+function closePurchaseModal(){ document.getElementById('purchaseOverlay').classList.remove('open'); currentPurchase=null; }
+
+function selectTicketType(btn, type){
+  document.querySelectorAll('.ticket-type-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedTicketType = type;
+  const p = type==='miembro' ? currentPurchase.priceMember : currentPurchase.price;
+  document.getElementById('mPrice').textContent = '$'+Number(p).toLocaleString('es-AR');
+}
+
+// ── SUBMIT ───────────────────────────────────────────────────────────────────
+async function submitPurchase(){
+  const name  = document.getElementById('fName').value.trim();
+  const dni   = document.getElementById('fDni').value.trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const email = document.getElementById('fEmail').value.trim();
+  const notes = document.getElementById('fNotes').value.trim();
+  const err   = document.getElementById('mErr');
+
+  if(!name||!email||!phone){ err.textContent='Completá nombre, teléfono y email.'; err.style.display='block'; return; }
+  if(!email.includes('@')){ err.textContent='Ingresá un email válido.'; err.style.display='block'; return; }
+
+  const btn = document.getElementById('mPayBtn');
+  btn.disabled=true; btn.textContent='Creando orden...';
+
+  const finalPrice = currentPurchase.type==='evento' && selectedTicketType==='miembro'
+    ? currentPurchase.priceMember
+    : currentPurchase.price;
+
+  const orderNum = 'HVN-' + Date.now().toString(36).toUpperCase();
+
+  const details = {
+    type: currentPurchase.type,
+    name: currentPurchase.name,
+    ticket_type: selectedTicketType,
+    duration: currentPurchase.duration || null,
+    slot_id: currentPurchase.slotId || null,
+    day_label: currentPurchase.dayLabel || null,
+    event_id: currentPurchase.eventId || null,
+    box_date: currentPurchase.type==='box' ? document.getElementById('boxDate').value : null,
+    box_time: currentPurchase.type==='box' ? document.getElementById('boxTime').value : null,
+  };
+
+  try {
+    await sb.from('haven_orders').insert({
+      order_number: orderNum,
+      type: currentPurchase.type,
+      subtype: currentPurchase.slotId || currentPurchase.eventId || currentPurchase.boxId || null,
+      customer_name: name,
+      customer_dni: dni||null,
+      customer_email: email,
+      customer_phone: phone,
+      details,
+      amount: finalPrice,
+      status: 'pending',
+      notes: notes||null,
+      visit_date: details.box_date || null,
+      time_slot: details.day_label || details.box_time || null,
+    });
+  } catch(e){ console.warn('Supabase save error:', e); }
+
+  try {
+    const res = await fetch('/api/crear-pago', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        titulo: `HAVEN · ${currentPurchase.name}`,
+        precio: finalPrice,
+        email,
+        metadata: { order_number: orderNum, type: currentPurchase.type }
+      })
+    });
+    const d = await res.json();
+    if(d.init_point){
+      window.location.href = d.init_point;
+      return;
+    }
+  } catch(e){}
+
+  btn.disabled=false; btn.textContent='Pagar con Mercado Pago →';
+  closePurchaseModal();
+  showConfirmation(orderNum, name, currentPurchase.name, finalPrice);
+}
+
+function showConfirmation(orderNum, name, product, amount){
+  document.getElementById('confirmOrderNum').textContent = orderNum;
+  document.getElementById('confirmDetail').innerHTML = `
+    <div class="confirm-row"><span>Producto</span><span>${product}</span></div>
+    <div class="confirm-row"><span>Cliente</span><span>${name}</span></div>
+    <div class="confirm-row"><span>Total</span><span>$${Number(amount).toLocaleString('es-AR')}</span></div>
+  `;
+  document.getElementById('confirmScreen').classList.add('show');
+}
+
+// Check if returning from Mercado Pago
+(()=>{
+  const p = new URLSearchParams(window.location.search);
+  if(p.get('status')==='approved' || p.get('collection_status')==='approved'){
+    const ord = p.get('external_reference') || '';
+    showConfirmation(ord,'','Tu compra','');
+    if(ord) sb.from('haven_orders').update({status:'paid',payment_id:p.get('payment_id')||null}).eq('order_number',ord).then(()=>{});
+  }
+})();
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderDayTabs();
+renderSlots();
+renderBoxes();
+renderEvents();
+</script>
+</body>
+</html>

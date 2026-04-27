@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/",       "destination": "/index.html" },
+    { "source": "/admin",  "destination": "/admin.html" }
+  ],
+  "headers": [
+    { "source": "/index.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/admin.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] }
+  ]
+}

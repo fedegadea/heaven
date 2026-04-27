@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAVEN Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#000;--s1:#0a0a0a;--s2:#111;--s3:#1a1a1a;--s4:#222;
+  --red:#c0392b;--red-d:#922b21;--red-l:#e74c3c;
+  --white:#efefef;--text:#888;--muted:#444;
+  --border:rgba(192,57,43,.18);--err:#ff6b6b;--ok:#2ecc71;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Playfair Display',serif;color:var(--white)}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--red-d);border-radius:3px}
+
+/* ── AUTH WALL ── */
+#authWall{position:fixed;inset:0;background:var(--bg);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
+#authWall.hidden{display:none}
+.auth-logo{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--red);letter-spacing:4px;margin-bottom:8px}
+.auth-sub{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:40px}
+.auth-card{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:380px;position:relative}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);border-radius:20px 20px 0 0}
+.auth-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block;font-weight:600}
+.auth-input{width:100%;background:var(--s3);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 14px;color:var(--white);font-family:'Poppins',sans-serif;font-size:14px;outline:none;margin-bottom:14px;transition:.2s}
+.auth-input:focus{border-color:var(--red)}
+.auth-btn{width:100%;background:var(--red);color:#fff;border:none;border-radius:10px;padding:14px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:.2s}
+.auth-btn:hover{background:var(--red-l)}
+.auth-btn:disabled{opacity:.4;cursor:not-allowed}
+.auth-msg{font-size:12px;margin-top:14px;text-align:center;color:var(--ok);display:none}
+.auth-err{font-size:12px;margin-top:10px;color:var(--err);display:none;text-align:center}
+
+/* ── APP SHELL ── */
+#app{display:none}
+#app.show{display:block}
+header{position:fixed;top:0;left:0;right:0;z-index:400;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(0,0,0,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.hdr-logo{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--red);letter-spacing:3px}
+.hdr-right{display:flex;align-items:center;gap:16px}
+.hdr-user{font-size:12px;color:var(--muted)}
+.hdr-logout{font-size:12px;color:var(--muted);cursor:pointer;text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;transition:.2s;background:none;font-family:'Poppins',sans-serif}
+.hdr-logout:hover{color:var(--red);border-color:var(--red)}
+
+main{padding-top:56px;min-height:100vh}
+
+/* ── SEARCH BAR ── */
+.top-bar{padding:24px 32px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.search-wrap{flex:1;min-width:200px;max-width:360px;position:relative}
+.search-input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:10px 14px 10px 36px;color:var(--white);font-family:'Poppins',sans-serif;font-size:13px;outline:none;transition:.2s}
+.search-input:focus{border-color:var(--red)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+.filter-select{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-family:'Poppins',sans-serif;font-size:13px;outline:none;cursor:pointer;transition:.2s}
+.filter-select:focus{border-color:var(--red)}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;padding:20px 32px}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.stat-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.stat-val{font-size:28px;font-weight:700;color:var(--white);font-family:'Playfair Display',serif;line-height:1}
+.stat-sub{font-size:11px;color:var(--red);margin-top:4px}
+
+/* ── TABS ── */
+.tabs-nav{display:flex;gap:2px;padding:0 32px;border-bottom:1px solid var(--border);margin-top:8px;overflow-x:auto}
+.tab-btn{padding:10px 18px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.2s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--red);border-bottom-color:var(--red)}
+.tab-pane{display:none;padding:24px 32px 40px}
+.tab-pane.active{display:block}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;background:var(--s1)}
+thead tr{border-bottom:1px solid var(--border)}
+th{padding:10px 16px;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+td{padding:12px 16px;font-size:13px;color:var(--text);vertical-align:middle;border-bottom:1px solid rgba(255,255,255,.04)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(192,57,43,.04)}
+.td-name{color:var(--white);font-weight:500}
+.td-order{font-family:'Playfair Display',serif;font-size:14px;color:var(--red);letter-spacing:1px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.badge-pending{background:rgba(255,200,0,.1);color:#ffc800;border:1px solid rgba(255,200,0,.2)}
+.badge-paid{background:rgba(46,204,113,.1);color:#2ecc71;border:1px solid rgba(46,204,113,.2)}
+.badge-attended{background:rgba(192,57,43,.15);color:var(--red-l);border:1px solid var(--border)}
+.badge-cancelled{background:rgba(100,100,100,.1);color:#666;border:1px solid rgba(100,100,100,.2)}
+.badge-entrada{background:rgba(52,152,219,.1);color:#5dade2;border:1px solid rgba(52,152,219,.15)}
+.badge-membresia{background:rgba(192,57,43,.12);color:var(--red-l);border:1px solid var(--border)}
+.badge-evento{background:rgba(155,89,182,.1);color:#a569bd;border:1px solid rgba(155,89,182,.15)}
+.badge-box{background:rgba(26,188,156,.1);color:#48c9b0;border:1px solid rgba(26,188,156,.15)}
+.row-btn{font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:'Poppins',sans-serif;transition:.2s}
+.row-btn-red{background:var(--red);color:#fff}
+.row-btn-red:hover{background:var(--red-l)}
+.row-btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.row-btn-outline:hover{border-color:var(--red);color:var(--red)}
+.row-btn-ok{background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.2)}
+.row-btn-ok:hover{background:rgba(46,204,113,.25)}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+
+/* ── TODAY GRID ── */
+.today-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.today-title{font-size:18px;color:var(--white);font-family:'Playfair Display',serif}
+.today-date{font-size:12px;color:var(--muted);letter-spacing:1px}
+.slot-section{margin-bottom:32px}
+.slot-section-hdr{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between}
+
+/* ── EVENTS ADMIN ── */
+.events-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:28px}
+.ev-admin-card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:24px}
+.ev-admin-name{font-size:18px;color:var(--white);font-family:'Playfair Display',serif;margin-bottom:4px}
+.ev-admin-date{font-size:11px;color:var(--red);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.ev-admin-prices{display:flex;gap:16px;margin-bottom:16px;font-size:12px;color:var(--text)}
+.ev-admin-actions{display:flex;gap:8px}
+
+/* ── NEW EVENT FORM ── */
+.new-event-card{background:var(--s1);border:1px dashed var(--border);border-radius:14px;padding:28px}
+.ne-title{font-size:14px;color:var(--white);font-weight:600;margin-bottom:20px;letter-spacing:.5px}
+.ne-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ne-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:block;font-weight:600}
+.ne-input{width:100%;background:var(--s3);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;color:var(--white);font-family:'Poppins',sans-serif;font-size:13px;outline:none;transition:.2s;margin-bottom:12px}
+.ne-input:focus{border-color:var(--red)}
+.ne-btn{background:var(--red);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:.2s}
+.ne-btn:hover{background:var(--red-l)}
+
+/* ── ORDER DETAIL MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:800;padding:20px;opacity:0;pointer-events:none;transition:.25s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:20px;width:100%;max-width:500px;padding:36px;max-height:90vh;overflow-y:auto;position:relative}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--s3);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;transition:.2s}
+.modal-close:hover{color:var(--white);background:var(--red)}
+.modal-tag{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.modal-order-num{font-size:26px;font-weight:700;color:var(--red);font-family:'Playfair Display',serif;letter-spacing:2px;margin-bottom:4px}
+.detail-table{width:100%;border-collapse:collapse;margin:20px 0}
+.detail-table td{padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.05)}
+.detail-table td:first-child{color:var(--muted);width:40%}
+.detail-table td:last-child{color:var(--white);font-weight:500}
+.modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.modal-action-btn{flex:1;min-width:120px;padding:12px;border-radius:10px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border:none;transition:.2s}
+.btn-pay{background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.25)}
+.btn-pay:hover{background:rgba(46,204,113,.25)}
+.btn-attend{background:var(--red);color:#fff}
+.btn-attend:hover{background:var(--red-l)}
+.btn-cancel{background:rgba(100,100,100,.1);color:#666;border:1px solid rgba(100,100,100,.2)}
+.btn-cancel:hover{background:rgba(100,100,100,.2);color:#888}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--s2);border:1px solid var(--border);color:var(--white);padding:10px 22px;border-radius:30px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s,opacity .3s;opacity:0;white-space:nowrap}
+.toast.ok{border-color:var(--red);color:var(--red-l)}
+.toast.err{border-color:var(--err);color:var(--err)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+@media(max-width:768px){
+  .stats-row{padding:16px;grid-template-columns:1fr 1fr}
+  .tab-pane{padding:16px}
+  .top-bar{padding:16px 16px 0}
+  header{padding:0 16px}
+  .tabs-nav{padding:0 16px}
+  th,td{padding:8px 10px}
+  .ne-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH WALL -->
+<div id="authWall">
+  <div class="auth-logo">HAVEN</div>
+  <div class="auth-sub">Panel Administrador</div>
+  <div class="auth-card">
+    <label class="auth-label">Email de administrador</label>
+    <input class="auth-input" id="loginEmail" type="email" placeholder="admin@haven.com" onkeydown="if(event.key==='Enter')loginAdmin()"/>
+    <button class="auth-btn" id="loginBtn" onclick="loginAdmin()">Enviar link mágico</button>
+    <div class="auth-msg" id="authMsg">¡Link enviado! Revisá tu email.</div>
+    <div class="auth-err" id="authErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="hdr-logo">HAVEN ADMIN</div>
+    <div class="hdr-right">
+      <span class="hdr-user" id="hdrUser"></span>
+      <button class="hdr-logout" onclick="logoutAdmin()">Salir</button>
+    </div>
+  </header>
+  <main>
+    <!-- SEARCH + FILTER -->
+    <div class="top-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="searchInput" placeholder="Buscar por N° de orden o nombre..." oninput="applyFilters()"/>
+      </div>
+      <select class="filter-select" id="filterType" onchange="applyFilters()">
+        <option value="">Todos los tipos</option>
+        <option value="entrada">Entradas</option>
+        <option value="membresia">Membresías</option>
+        <option value="evento">Eventos</option>
+        <option value="box">Box</option>
+      </select>
+      <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+        <option value="">Todos los estados</option>
+        <option value="pending">Pendiente</option>
+        <option value="paid">Pagado</option>
+        <option value="attended">Ingresó</option>
+        <option value="cancelled">Cancelado</option>
+      </select>
+      <input class="filter-select" id="filterDate" type="date" style="cursor:pointer" onchange="applyFilters()" title="Filtrar por fecha de visita"/>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card"><div class="stat-label">Órdenes hoy</div><div class="stat-val" id="statToday">—</div><div class="stat-sub">nuevas</div></div>
+      <div class="stat-card"><div class="stat-label">Ingresos hoy</div><div class="stat-val" id="statRev">—</div><div class="stat-sub">ARS</div></div>
+      <div class="stat-card"><div class="stat-label">Pendientes</div><div class="stat-val" id="statPend">—</div><div class="stat-sub">sin pagar</div></div>
+      <div class="stat-card"><div class="stat-label">Box hoy</div><div class="stat-val" id="statBox">—</div><div class="stat-sub">reservas</div></div>
+      <div class="stat-card"><div class="stat-label">Total órdenes</div><div class="stat-val" id="statTotal">—</div><div class="stat-sub">históricas</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" onclick="switchTab('ordenes',this)">Todas las órdenes</button>
+      <button class="tab-btn" onclick="switchTab('hoy',this)">Entradas de hoy</button>
+      <button class="tab-btn" onclick="switchTab('box',this)">Reservas Box</button>
+      <button class="tab-btn" onclick="switchTab('eventos',this)">Eventos</button>
+    </div>
+
+    <!-- TAB: TODAS LAS ÓRDENES -->
+    <div class="tab-pane active" id="tab-ordenes">
+      <div class="tbl-wrap">
+        <table id="ordersTable">
+          <thead><tr>
+            <th>N° Orden</th><th>Tipo</th><th>Cliente</th><th>Monto</th><th>Estado</th><th>Fecha</th><th>Detalle</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="ordersBody"><tr><td colspan="8" class="empty">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: ENTRADAS DE HOY -->
+    <div class="tab-pane" id="tab-hoy">
+      <div class="today-header">
+        <div class="today-title">Entradas de hoy</div>
+        <div class="today-date" id="todayDate"></div>
+      </div>
+      <div id="todayContent"><div class="empty">Cargando...</div></div>
+    </div>
+
+    <!-- TAB: BOX -->
+    <div class="tab-pane" id="tab-box">
+      <div class="today-header">
+        <div class="today-title">Reservas de Box</div>
+        <div class="today-date">Próximas y pasadas</div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>N° Orden</th><th>Box</th><th>Cliente</th><th>Teléfono</th><th>Fecha</th><th>Horario</th><th>Estado</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="boxBody"><tr><td colspan="8" class="empty">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: EVENTOS -->
+    <div class="tab-pane" id="tab-eventos">
+      <div class="today-header">
+        <div class="today-title">Eventos especiales</div>
+      </div>
+
+      <!-- Existing events -->
+      <div class="events-admin-grid" id="eventsAdminGrid"></div>
+
+      <!-- Create event form -->
+      <div class="new-event-card">
+        <div class="ne-title">+ Crear nuevo evento</div>
+        <div class="ne-grid">
+          <div>
+            <label class="ne-label">Nombre del evento</label>
+            <input class="ne-input" id="neNombre" placeholder="UMBRAL ROJO"/>
+          </div>
+          <div>
+            <label class="ne-label">Emoji</label>
+            <input class="ne-input" id="neEmoji" placeholder="🔴" maxlength="4"/>
+          </div>
+          <div>
+            <label class="ne-label">Fecha</label>
+            <input class="ne-input" id="neFecha" type="date"/>
+          </div>
+          <div>
+            <label class="ne-label">Hora de inicio</label>
+            <input class="ne-input" id="neHora" type="time"/>
+          </div>
+          <div>
+            <label class="ne-label">Precio General ($)</label>
+            <input class="ne-input" id="nePriceGen" type="number" placeholder="25000"/>
+          </div>
+          <div>
+            <label class="ne-label">Precio Miembro ($)</label>
+            <input class="ne-input" id="nePriceMem" type="number" placeholder="12500"/>
+          </div>
+        </div>
+        <div>
+          <label class="ne-label">Descripción</label>
+          <input class="ne-input" id="neDesc" placeholder="Una noche de..."/>
+        </div>
+        <button class="ne-btn" onclick="createEvent()">Publicar evento</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeDetail()">✕</button>
+    <div class="modal-tag" id="dTag"></div>
+    <div class="modal-order-num" id="dOrderNum"></div>
+    <table class="detail-table" id="dTable"></table>
+    <div class="modal-actions" id="dActions"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://dtopwxldxlwgdvpjcegg.supabase.co';
+const SUPA_KEY = 'sb_publishable_W54QQPJ_WFtvI67N5SPniQ_jZ1kpCES';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const ADMIN_EMAILS = ['federicosegundogadea@gmail.com'];
+
+let allOrders = [];
+let allEvents = [];
+let detailOrder = null;
+
+// ── AUTH ────────────────────────────────────────────────────────────────────
+async function loginAdmin(){
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const btn = document.getElementById('loginBtn');
+  const msgEl = document.getElementById('authMsg');
+  const errEl = document.getElementById('authErr');
+  msgEl.style.display='none'; errEl.style.display='none';
+
+  if(!email||!email.includes('@')){ errEl.textContent='Ingresá un email válido.'; errEl.style.display='block'; return; }
+  if(!ADMIN_EMAILS.includes(email)){ errEl.textContent='Email no autorizado.'; errEl.style.display='block'; return; }
+
+  btn.disabled=true; btn.textContent='Enviando...';
+  const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: window.location.href } });
+  btn.disabled=false; btn.textContent='Enviar link mágico';
+  if(error){ errEl.textContent='Error: '+error.message; errEl.style.display='block'; }
+  else { msgEl.style.display='block'; }
+}
+
+async function logoutAdmin(){
+  await sb.auth.signOut();
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('authWall').classList.remove('hidden');
+}
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  if(session){
+    const email = session.user.email;
+    if(!ADMIN_EMAILS.includes(email)){
+      await sb.auth.signOut(); return;
+    }
+    document.getElementById('authWall').classList.add('hidden');
+    document.getElementById('app').classList.add('show');
+    document.getElementById('hdrUser').textContent = email;
+    loadAll();
+  }
+});
+
+// ── LOAD ALL ────────────────────────────────────────────────────────────────
+async function loadAll(){
+  await Promise.all([loadOrders(), loadEvents()]);
+}
+
+async function loadOrders(){
+  const { data, error } = await sb.from('haven_orders').select('*').order('created_at',{ascending:false});
+  if(error){ showToast('Error cargando órdenes','err'); return; }
+  allOrders = data || [];
+  applyFilters();
+  renderStats();
+  renderToday();
+  renderBoxTab();
+}
+
+async function loadEvents(){
+  const { data } = await sb.from('haven_events').select('*').order('event_date');
+  allEvents = data || [];
+  renderEventsTab();
+}
+
+// ── STATS ────────────────────────────────────────────────────────────────────
+function renderStats(){
+  const today = new Date().toISOString().slice(0,10);
+  const todayOrders = allOrders.filter(o=>o.created_at?.slice(0,10)===today);
+  const todayRev = todayOrders.filter(o=>o.status==='paid'||o.status==='attended').reduce((s,o)=>s+Number(o.amount||0),0);
+  const pending = allOrders.filter(o=>o.status==='pending').length;
+  const boxToday = allOrders.filter(o=>o.type==='box'&&o.visit_date===today).length;
+
+  document.getElementById('statToday').textContent = todayOrders.length;
+  document.getElementById('statRev').textContent = '$'+todayRev.toLocaleString('es-AR');
+  document.getElementById('statPend').textContent = pending;
+  document.getElementById('statBox').textContent = boxToday;
+  document.getElementById('statTotal').textContent = allOrders.length;
+}
+
+// ── FILTERS ─────────────────────────────────────────────────────────────────
+function applyFilters(){
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const type = document.getElementById('filterType').value;
+  const status = document.getElementById('filterStatus').value;
+  const date = document.getElementById('filterDate').value;
+
+  let filtered = allOrders.filter(o=>{
+    if(q && !o.order_number?.toLowerCase().includes(q) && !o.customer_name?.toLowerCase().includes(q) && !o.customer_email?.toLowerCase().includes(q)) return false;
+    if(type && o.type !== type) return false;
+    if(status && o.status !== status) return false;
+    if(date && o.visit_date !== date && o.created_at?.slice(0,10) !== date) return false;
+    return true;
+  });
+
+  renderOrdersTable(filtered);
+}
+
+// ── ORDERS TABLE ─────────────────────────────────────────────────────────────
+function renderOrdersTable(orders){
+  const tbody = document.getElementById('ordersBody');
+  if(!orders.length){ tbody.innerHTML='<tr><td colspan="8" class="empty">Sin resultados</td></tr>'; return; }
+  tbody.innerHTML = orders.map(o=>`
+    <tr>
+      <td class="td-order">${o.order_number||'—'}</td>
+      <td><span class="badge badge-${o.type||''}">${typeName(o.type)}</span></td>
+      <td class="td-name">${o.customer_name||'—'}</td>
+      <td>$${Number(o.amount||0).toLocaleString('es-AR')}</td>
+      <td><span class="badge badge-${o.status||'pending'}">${statusName(o.status)}</span></td>
+      <td>${o.created_at?new Date(o.created_at).toLocaleDateString('es-AR'):''}</td>
+      <td style="font-size:12px;color:var(--muted)">${o.details?.day_label||o.details?.duration||o.visit_date||''}</td>
+      <td><button class="row-btn row-btn-outline" onclick="openDetail('${o.id}')">Ver →</button></td>
+    </tr>
+  `).join('');
+}
+
+// ── TODAY TAB ────────────────────────────────────────────────────────────────
+function renderToday(){
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  const todayEntries = allOrders.filter(o=>o.type==='entrada' && (o.visit_date===today || o.created_at?.slice(0,10)===today));
+
+  if(!todayEntries.length){
+    document.getElementById('todayContent').innerHTML='<div class="empty">No hay entradas para hoy</div>';
+    return;
+  }
+
+  // Group by time slot
+  const bySlot = {};
+  todayEntries.forEach(o=>{
+    const slot = o.time_slot || o.details?.day_label || 'Sin franja';
+    if(!bySlot[slot]) bySlot[slot]=[];
+    bySlot[slot].push(o);
+  });
+
+  let html = '';
+  for(const [slot,orders] of Object.entries(bySlot)){
+    const paid = orders.filter(o=>o.status==='paid'||o.status==='attended').length;
+    html += `<div class="slot-section">
+      <div class="slot-section-hdr"><span>${slot}</span><span>${paid}/${orders.length} confirmadas</span></div>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>N° Orden</th><th>Cliente</th><th>DNI</th><th>Tel</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>${orders.map(o=>`
+          <tr>
+            <td class="td-order">${o.order_number||'—'}</td>
+            <td class="td-name">${o.customer_name||'—'}</td>
+            <td>${o.customer_dni||'—'}</td>
+            <td>${o.customer_phone||'—'}</td>
+            <td><span class="badge badge-${o.status}">${statusName(o.status)}</span></td>
+            <td style="display:flex;gap:6px;flex-wrap:wrap">
+              ${o.status!=='attended'?`<button class="row-btn row-btn-ok" onclick="markAttended('${o.id}')">✔ Ingresó</button>`:''}
+              <button class="row-btn row-btn-outline" onclick="openDetail('${o.id}')">Ver</button>
+            </td>
+          </tr>
+        `).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+  document.getElementById('todayContent').innerHTML = html;
+}
+
+// ── BOX TAB ──────────────────────────────────────────────────────────────────
+function renderBoxTab(){
+  const boxes = allOrders.filter(o=>o.type==='box').sort((a,b)=>{
+    const da = a.visit_date||''; const db = b.visit_date||'';
+    return da > db ? 1 : da < db ? -1 : 0;
+  });
+  const tbody = document.getElementById('boxBody');
+  if(!boxes.length){ tbody.innerHTML='<tr><td colspan="8" class="empty">Sin reservas de box</td></tr>'; return; }
+  tbody.innerHTML = boxes.map(o=>`
+    <tr>
+      <td class="td-order">${o.order_number||'—'}</td>
+      <td>${o.details?.name||o.subtype||'—'}</td>
+      <td class="td-name">${o.customer_name||'—'}</td>
+      <td>${o.customer_phone||'—'}</td>
+      <td>${o.visit_date||'—'}</td>
+      <td>${o.details?.box_time||o.time_slot||'—'}</td>
+      <td><span class="badge badge-${o.status}">${statusName(o.status)}</span></td>
+      <td style="display:flex;gap:6px">
+        ${o.status!=='attended'?`<button class="row-btn row-btn-ok" onclick="markAttended('${o.id}')">✔ Asistió</button>`:''}
+        <button class="row-btn row-btn-outline" onclick="openDetail('${o.id}')">Ver</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ── EVENTS TAB ───────────────────────────────────────────────────────────────
+function renderEventsTab(){
+  const container = document.getElementById('eventsAdminGrid');
+  if(!allEvents.length){ container.innerHTML='<div class="empty">Sin eventos cargados</div>'; return; }
+  container.innerHTML = allEvents.map(ev=>`
+    <div class="ev-admin-card">
+      <div style="font-size:28px;margin-bottom:8px">${ev.emoji||'✦'}</div>
+      <div class="ev-admin-name">${ev.name}</div>
+      <div class="ev-admin-date">${ev.event_date||'Fecha a confirmar'} ${ev.event_time?'· '+ev.event_time:''}</div>
+      <div class="ev-admin-prices">
+        <span>General: $${Number(ev.price_general).toLocaleString('es-AR')}</span>
+        <span>Miembro: $${Number(ev.price_miembro).toLocaleString('es-AR')}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text);margin-bottom:16px;line-height:1.5">${ev.description||''}</div>
+      <div class="ev-admin-actions">
+        <span class="badge ${ev.active?'badge-paid':'badge-cancelled'}" style="margin-right:8px">${ev.active?'Activo':'Inactivo'}</span>
+        <button class="row-btn ${ev.active?'row-btn-outline':'row-btn-red'}" onclick="toggleEvent('${ev.id}',${!ev.active})">${ev.active?'Desactivar':'Activar'}</button>
+        <button class="row-btn row-btn-outline" onclick="deleteEvent('${ev.id}')" style="color:var(--err);border-color:var(--err)">Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function createEvent(){
+  const nombre = document.getElementById('neNombre').value.trim();
+  const emoji  = document.getElementById('neEmoji').value.trim();
+  const fecha  = document.getElementById('neFecha').value;
+  const hora   = document.getElementById('neHora').value;
+  const pg     = Number(document.getElementById('nePriceGen').value);
+  const pm     = Number(document.getElementById('nePriceMem').value);
+  const desc   = document.getElementById('neDesc').value.trim();
+
+  if(!nombre||!pg){ showToast('Completá nombre y precio general','err'); return; }
+
+  const { error } = await sb.from('haven_events').insert({
+    name: nombre, emoji, event_date: fecha||null, event_time: hora||null,
+    price_general: pg, price_miembro: pm||Math.round(pg/2),
+    description: desc, active: true
+  });
+  if(error){ showToast('Error: '+error.message,'err'); return; }
+  showToast('Evento creado');
+  ['neNombre','neEmoji','neFecha','neHora','nePriceGen','nePriceMem','neDesc'].forEach(id=>document.getElementById(id).value='');
+  await loadEvents();
+}
+
+async function toggleEvent(id, active){
+  await sb.from('haven_events').update({active}).eq('id',id);
+  await loadEvents();
+  showToast(active?'Evento activado':'Evento desactivado');
+}
+
+async function deleteEvent(id){
+  if(!confirm('¿Eliminar este evento?')) return;
+  await sb.from('haven_events').delete().eq('id',id);
+  await loadEvents();
+  showToast('Evento eliminado');
+}
+
+// ── ORDER DETAIL ──────────────────────────────────────────────────────────────
+function openDetail(id){
+  const o = allOrders.find(x=>x.id===id);
+  if(!o) return;
+  detailOrder = o;
+  document.getElementById('dTag').textContent = typeName(o.type)+' · '+statusName(o.status);
+  document.getElementById('dOrderNum').textContent = o.order_number||'—';
+
+  const d = o.details||{};
+  document.getElementById('dTable').innerHTML = `
+    <tr><td>Cliente</td><td>${o.customer_name||'—'}</td></tr>
+    <tr><td>DNI</td><td>${o.customer_dni||'—'}</td></tr>
+    <tr><td>Email</td><td>${o.customer_email||'—'}</td></tr>
+    <tr><td>Teléfono</td><td>${o.customer_phone||'—'}</td></tr>
+    <tr><td>Monto</td><td>$${Number(o.amount||0).toLocaleString('es-AR')}</td></tr>
+    ${d.day_label?`<tr><td>Franja</td><td>${d.day_label}</td></tr>`:''}
+    ${d.duration?`<tr><td>Duración</td><td>${d.duration}</td></tr>`:''}
+    ${o.visit_date?`<tr><td>Fecha visita</td><td>${o.visit_date}</td></tr>`:''}
+    ${d.box_time?`<tr><td>Horario box</td><td>${d.box_time}</td></tr>`:''}
+    ${d.ticket_type?`<tr><td>Tipo entrada</td><td>${d.ticket_type}</td></tr>`:''}
+    ${o.notes?`<tr><td>Observaciones</td><td>${o.notes}</td></tr>`:''}
+    <tr><td>Creado</td><td>${o.created_at?new Date(o.created_at).toLocaleString('es-AR'):''}</td></tr>
+  `;
+
+  let actions = '';
+  if(o.status==='pending') actions += `<button class="modal-action-btn btn-pay" onclick="updateStatus('${o.id}','paid')">✔ Marcar pagado</button>`;
+  if(o.status==='paid')    actions += `<button class="modal-action-btn btn-attend" onclick="updateStatus('${o.id}','attended')">✔ Confirmó ingreso</button>`;
+  if(o.status!=='cancelled') actions += `<button class="modal-action-btn btn-cancel" onclick="updateStatus('${o.id}','cancelled')">✕ Cancelar</button>`;
+  document.getElementById('dActions').innerHTML = actions;
+
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail(){ document.getElementById('detailOverlay').classList.remove('open'); detailOrder=null; }
+
+async function updateStatus(id, status){
+  const { error } = await sb.from('haven_orders').update({status}).eq('id',id);
+  if(error){ showToast('Error: '+error.message,'err'); return; }
+  showToast('Estado actualizado');
+  closeDetail();
+  await loadOrders();
+}
+
+async function markAttended(id){
+  await sb.from('haven_orders').update({status:'attended'}).eq('id',id);
+  showToast('Ingreso confirmado');
+  await loadOrders();
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(name, btn){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function typeName(t){ return {entrada:'Entrada',membresia:'Membresía',evento:'Evento',box:'Box'}[t]||t||'—'; }
+function statusName(s){ return {pending:'Pendiente',paid:'Pagado',attended:'Ingresó',cancelled:'Cancelado'}[s]||s||'—'; }
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>
