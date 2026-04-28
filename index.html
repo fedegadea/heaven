@@ -170,9 +170,18 @@ footer{border-top:1px solid var(--border);padding:56px 40px;background:var(--s1)
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
 /* ── MOBILE ── */
+/* ── MOBILE MENU ── */
+.nav-burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;border:none;background:transparent}
+.nav-burger span{width:22px;height:2px;background:var(--white);border-radius:2px;transition:.2s;display:block}
+.mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:rgba(0,0,0,.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:490;padding:20px 24px;flex-direction:column;gap:4px}
+.mobile-menu.open{display:flex}
+.mobile-menu a{color:var(--text);text-decoration:none;font-size:13px;font-weight:500;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);letter-spacing:.5px;text-transform:uppercase;transition:.2s}
+.mobile-menu a:hover{color:var(--red)}
+.mobile-menu .nav-cta{color:#fff!important;background:var(--red);border-radius:8px;padding:12px 16px;border-bottom:none;text-align:center;font-weight:700;margin-top:8px}
 @media(max-width:768px){
   nav{padding:0 20px}
   .nav-links{display:none}
+  .nav-burger{display:flex}
   .hero-actions{grid-template-columns:1fr}
   .section{padding:64px 20px}
   .section-full{padding:64px 20px}
@@ -186,7 +195,10 @@ footer{border-top:1px solid var(--border);padding:56px 40px;background:var(--s1)
 
 <!-- NAV -->
 <nav>
-  <a href="/haven" class="nav-logo">HAVEN</a>
+  <a href="/" class="nav-logo">HAVEN</a>
+  <button class="nav-burger" id="navBurger" onclick="toggleMobileMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
   <ul class="nav-links">
     <li><a href="#entradas">Entradas</a></li>
     <li><a href="#membresia">Membresías</a></li>
@@ -195,6 +207,13 @@ footer{border-top:1px solid var(--border);padding:56px 40px;background:var(--s1)
     <li><a href="#membresia" class="nav-cta">Hacerse miembro</a></li>
   </ul>
 </nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#entradas" onclick="closeMobileMenu()">Entradas</a>
+  <a href="#membresia" onclick="closeMobileMenu()">Membresías</a>
+  <a href="#eventos" onclick="closeMobileMenu()">Eventos</a>
+  <a href="#box" onclick="closeMobileMenu()">Box privados</a>
+  <a href="#membresia" class="nav-cta" onclick="closeMobileMenu()">Hacerse miembro</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -279,9 +298,9 @@ footer{border-top:1px solid var(--border);padding:56px 40px;background:var(--s1)
       <a href="#entradas" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Entradas</a>
       <a href="#membresia" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Membresías</a>
       <a href="#eventos" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Eventos</a>
-      <a href="/haven/admin" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Admin</a>
+      <a href="/admin" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Admin</a>
     </nav>
-    <div class="footer-copy">© 2025 HAVEN. Todos los derechos reservados.</div>
+    <div class="footer-copy">© 2026 HAVEN. Todos los derechos reservados.</div>
   </div>
 </footer>
 
@@ -597,6 +616,15 @@ function showToast(msg,type='ok'){
   t.textContent=msg; t.className=`toast ${type} show`;
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+
+// ── MOBILE MENU ───────────────────────────────────────────────────────────────
+function toggleMobileMenu(){
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+function closeMobileMenu(){
+  document.getElementById('mobileMenu').classList.remove('open');
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
