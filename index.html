@@ -549,8 +549,9 @@ async function submitPurchase(){
     box_time: currentPurchase.type==='box' ? document.getElementById('boxTime').value : null,
   };
 
+  let orderSaved = false;
   try {
-    await sb.from('haven_orders').insert({
+    const { error: insertErr } = await sb.from('haven_orders').insert({
       order_number: orderNum,
       type: currentPurchase.type,
       subtype: currentPurchase.slotId || currentPurchase.eventId || currentPurchase.boxId || null,
@@ -565,7 +566,29 @@ async function submitPurchase(){
       visit_date: details.box_date || null,
       time_slot: details.day_label || details.box_time || null,
     });
+    if(!insertErr) orderSaved = true;
   } catch(e){ console.warn('Supabase save error:', e); }
+
+  // Enviar mail de confirmación
+  if(orderSaved){
+    try {
+      await fetch('/api/enviar-mail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_number: orderNum,
+          type: currentPurchase.type,
+          customer_name: name,
+          customer_email: email,
+          customer_phone: phone,
+          customer_dni: dni||null,
+          amount: finalPrice,
+          details,
+          notes: notes||null,
+        })
+      });
+    } catch(e){ console.warn('Mail error:', e); }
+  }
 
   try {
     const res = await fetch('/api/crear-pago', {
