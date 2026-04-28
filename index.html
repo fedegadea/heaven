@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HAVEN — Club & Experiencias</title>
+<title>HEAVEN — Club & Experiencias</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -195,7 +195,7 @@ footer{border-top:1px solid var(--border);padding:56px 40px;background:var(--s1)
 
 <!-- NAV -->
 <nav>
-  <a href="/" class="nav-logo">HAVEN</a>
+  <a href="/" class="nav-logo">HEAVEN</a>
   <button class="nav-burger" id="navBurger" onclick="toggleMobileMenu()" aria-label="Menu">
     <span></span><span></span><span></span>
   </button>
@@ -218,7 +218,7 @@ footer{border-top:1px solid var(--border);padding:56px 40px;background:var(--s1)
 <!-- HERO -->
 <section class="hero">
   <div class="hero-eyebrow">Buenos Aires · Club exclusivo</div>
-  <h1 class="hero-title">HAVEN</h1>
+  <h1 class="hero-title">HEAVEN</h1>
   <p class="hero-sub">El espacio que te espera. Entradas, membresías, eventos y espacios privados — todo en un lugar.</p>
   <div class="hero-actions">
     <a href="#entradas" class="hero-btn hero-btn-red">Comprar entrada</a>
@@ -243,14 +243,14 @@ footer{border-top:1px solid var(--border);padding:56px 40px;background:var(--s1)
 <div class="section-full" id="membresia">
   <div class="section-inner">
     <span class="sec-tag">Acceso total</span>
-    <h2 class="sec-title" style="margin-bottom:40px">Membresía Haven</h2>
+    <h2 class="sec-title" style="margin-bottom:40px">Membresía Heaven</h2>
     <div class="memb-card">
       <div>
         <div class="memb-badge">Mensual · Renovación manual</div>
         <div class="memb-title">Membresía<br/>Haven</div>
         <div class="memb-price">$45.000</div>
         <div class="memb-period">por mes</div>
-        <button class="memb-btn" onclick="openModal('membresia',{name:'Membresía Haven',price:45000,tag:'Membresía mensual'})">Suscribirme ahora</button>
+        <button class="memb-btn" onclick="openModal('membresia',{name:'Membresía Heaven',price:45000,tag:'Membresía mensual'})">Suscribirme ahora</button>
         <div class="memb-note">El acceso se activa dentro de las 24h hábiles de confirmado el pago.<br/>Renovación mensual manual — te avisamos antes del vencimiento.</div>
       </div>
       <div class="benefits-list">
@@ -293,14 +293,14 @@ footer{border-top:1px solid var(--border);padding:56px 40px;background:var(--s1)
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
-    <div class="footer-logo">HAVEN</div>
+    <div class="footer-logo">HEAVEN</div>
     <nav style="display:flex;gap:24px">
       <a href="#entradas" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Entradas</a>
       <a href="#membresia" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Membresías</a>
       <a href="#eventos" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Eventos</a>
       <a href="/admin" style="color:var(--muted);font-size:12px;text-decoration:none;transition:.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Admin</a>
     </nav>
-    <div class="footer-copy">© 2026 HAVEN. Todos los derechos reservados.</div>
+    <div class="footer-copy">© 2026 HEAVEN. Todos los derechos reservados.</div>
   </div>
 </footer>
 
@@ -409,7 +409,7 @@ const DAYS = [
     id:'dom', label:'Domingos · Atardecer',
     slots:[
       {id:'dom-early', time:'14:00 — 17:00', name:'Promo Early', desc:'Domingo tranquilo de apertura.', price:7000},
-      {id:'dom-gen',   time:'17:00 — 22:00', name:'Ángeles del Atardecer', desc:'El cierre de semana en HAVEN.', price:9000},
+      {id:'dom-gen',   time:'17:00 — 22:00', name:'Ángeles del Atardecer', desc:'El cierre de semana en HEAVEN.', price:9000},
     ]
   },
 ];
@@ -431,13 +431,13 @@ const BOXES = [
 let activeDay = 'lmx';
 
 function renderDayTabs(){
-  document.getElementById('dayTabs').innerHTML = DAYS.map(d=>`
+  document.getElementById('dayTabs').innerHTML = DAYS_LIVE.map(d=>`
     <button class="day-tab ${d.id===activeDay?'active':''}" onclick="selectDay('${d.id}')">${d.label}</button>
   `).join('');
 }
 function selectDay(id){ activeDay=id; renderDayTabs(); renderSlots(); }
 function renderSlots(){
-  const day = DAYS.find(d=>d.id===activeDay);
+  const day = DAYS_LIVE.find(d=>d.id===activeDay);
   document.getElementById('slotsGrid').innerHTML = day.slots.map(s=>`
     <div class="slot-card">
       <div class="slot-time">${s.time}</div>
@@ -475,7 +475,7 @@ async function renderEvents(){
 
 // ── RENDER BOX ────────────────────────────────────────────────────────────────
 function renderBoxes(){
-  document.getElementById('boxGrid').innerHTML = BOXES.map(b=>`
+  document.getElementById('boxGrid').innerHTML = BOXES_LIVE.map(b=>`
     <div class="box-card">
       <div class="box-duration">${b.duration}</div>
       <div class="box-name">${b.name}</div>
@@ -571,7 +571,7 @@ async function submitPurchase(){
     const res = await fetch('/api/crear-pago', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        titulo: `HAVEN · ${currentPurchase.name}`,
+        titulo: `HEAVEN · ${currentPurchase.name}`,
         precio: finalPrice,
         email,
         metadata: { order_number: orderNum, type: currentPurchase.type }
@@ -627,11 +627,54 @@ function closeMobileMenu(){
   document.getElementById('mobileMenu').classList.remove('open');
 }
 
+// ── DEFAULT PRICES (fallback si Supabase no responde) ──────────────────────────
+const DEFAULT_PRICES = {
+  membresia: 45000,
+  entradas: {
+    lmx:{ label:'Lun — Mié',            slots:[{id:'lmx-early',time:'14:00 — 17:00',name:'Promo Early',price:6000},{id:'lmx-gen',time:'17:00 — 22:00',name:'Entrada General',price:8000}]},
+    jue:{ label:'Jueves · After Office', slots:[{id:'jue-promo',time:'14:00 — 18:00',name:'Promo Tarde',price:8000},{id:'jue-gen',time:'18:00 — 22:00',name:'Entrada General',price:10000},{id:'jue-late',time:'22:00 — 02:00',name:'Ingreso Nocturno',price:12000}]},
+    vie:{ label:'Viernes · Tercer Tiempo',slots:[{id:'vie-tard',time:'14:00 — 20:00',name:'Tarde',price:10000},{id:'vie-noch',time:'20:00 — 00:00',name:'Noche',price:15000},{id:'vie-mad',time:'00:00 — 06:00',name:'Madrugada',price:18000}]},
+    sab:{ label:'Sábados · Black Night', slots:[{id:'sab-tard',time:'14:00 — 20:00',name:'Tarde',price:12000},{id:'sab-noch',time:'20:00 — 00:00',name:'Noche',price:18000},{id:'sab-mad',time:'00:00 — 06:00',name:'Black Night',price:22000}]},
+    dom:{ label:'Domingos · Atardecer',  slots:[{id:'dom-early',time:'14:00 — 17:00',name:'Promo Early',price:7000},{id:'dom-gen',time:'17:00 — 22:00',name:'Ángeles del Atardecer',price:9000}]},
+  },
+  box:[
+    {id:'box-1h', duration:'1 hora',      name:'Box · 1 Hora',       price:12000},
+    {id:'box-2h', duration:'2 horas',     name:'Box · 2 Horas',      price:20000},
+    {id:'box-noch',duration:'Turno noche',name:'Box · Noche',        price:35000},
+    {id:'box-dia',duration:'Día completo',name:'Box · Día Completo', price:50000},
+  ]
+};
+
+let PRICES = JSON.parse(JSON.stringify(DEFAULT_PRICES));
+
+// Override DAYS and BOXES with dynamic prices
+function buildDaysFromPrices(){
+  return Object.entries(PRICES.entradas).map(([id,g])=>({id,label:g.label,slots:g.slots}));
+}
+
+// Patch DAYS and BOXES references
+let DAYS_LIVE = buildDaysFromPrices();
+let BOXES_LIVE = PRICES.box;
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
-renderDayTabs();
-renderSlots();
-renderBoxes();
-renderEvents();
+async function init(){
+  // Load prices from Supabase
+  try {
+    const { data } = await sb.from('haven_config').select('value').eq('key','prices').maybeSingle();
+    if(data?.value){ PRICES = data.value; }
+  } catch(e){}
+  DAYS_LIVE = buildDaysFromPrices();
+  BOXES_LIVE = PRICES.box;
+  // Update membresía price on page
+  const membEl = document.querySelector('.memb-price');
+  if(membEl) membEl.textContent = '$'+Number(PRICES.membresia).toLocaleString('es-AR');
+
+  renderDayTabs();
+  renderSlots();
+  renderBoxes();
+  renderEvents();
+}
+init();
 </script>
 </body>
 </html>
